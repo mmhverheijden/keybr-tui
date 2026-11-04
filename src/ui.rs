@@ -2,7 +2,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{Line, Span},
-    widgets::Paragraph,
+    widgets::{Block, Paragraph},
     Frame,
 };
 
@@ -10,6 +10,11 @@ use crate::app::{App, AppScreen, ErrorMode};
 use crate::components::{dashboard, menu, progress, settings, typing_area};
 
 pub fn view(app: &App, frame: &mut Frame) {
+    frame.render_widget(
+        Block::default().style(Style::default().bg(Color::Black)),
+        frame.area(),
+    );
+
     match app.screen {
         AppScreen::Menu => menu::render(app, frame, frame.area()),
         AppScreen::Typing => render_typing_screen(app, frame),
@@ -106,6 +111,15 @@ mod tests {
             .iter()
             .map(|&c| language.upper(c))
             .collect()
+    }
+
+    #[test]
+    fn view_paints_an_opaque_background() {
+        let app = App::new_with_language(35, ErrorMode::ForgiveMistakes, None, Language::English);
+        let mut terminal = Terminal::new(TestBackend::new(120, 30)).expect("terminal");
+        terminal.draw(|frame| view(&app, frame)).expect("draw");
+
+        assert_eq!(terminal.backend().buffer()[(0, 0)].bg, Color::Black);
     }
 
     /// At 80 columns no language's heatmap fits on one row: every letter
